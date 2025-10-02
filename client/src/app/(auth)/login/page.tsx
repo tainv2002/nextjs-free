@@ -1,5 +1,6 @@
 // 'use client'
-import { websites } from '@/lib/data'
+import LoginForm from "@/app/(auth)/login/login-form";
+import { websites } from "@/lib/data";
 // import { useState } from 'react'
 
 export default function LoginPage() {
@@ -7,7 +8,7 @@ export default function LoginPage() {
   return (
     <div>
       Login page
-      <ul>
+      {/* <ul>
         {websites.map((item) => {
           return (
             <li key={item.url}>
@@ -17,7 +18,8 @@ export default function LoginPage() {
             </li>
           )
         })}
-      </ul>
+      </ul> */}
+      <LoginForm />
     </div>
-  )
+  );
 }
