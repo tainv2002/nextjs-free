@@ -65,23 +65,3 @@
     --ring: 212.7 26.8% 83.9%;
   }
 }
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  h1,
-  h2,
-  h3 {
-    @apply text-red-500;
-  }
-}
-
-@layer utilities {
-  .text-mini {
-    @apply text-xs;
-  }
-}
