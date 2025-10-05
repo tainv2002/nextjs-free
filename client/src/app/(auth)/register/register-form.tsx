@@ -42,8 +42,6 @@ const RegisterForm = () => {
         body: JSON.stringify(values),
       }
     ).then((res) => res.json());
-
-    console.log({ result });
   };
 
   return (

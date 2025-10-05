@@ -2,11 +2,6 @@ import { ModeToggle } from "@/components/mode-toggle";
 import RegisterForm from "@/app/(auth)/register/register-form";
 
 const RegisterPage = () => {
-  console.log(
-    "process.env.NEXT_PUBLIC_API_ENDPOINT",
-    process.env.NEXT_PUBLIC_API_ENDPOINT
-  );
-
   return (
     <div>
       <ModeToggle />
