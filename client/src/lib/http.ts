@@ -4,14 +4,41 @@ import { LoginResType } from "@/schemaValidations/auth.schema";
 type CustomOptions = RequestInit & { baseUrl?: string };
 type CustomOptionsWithoutBody = Omit<CustomOptions, "body">;
 
+const ENTITY_ERROR_STATUS = 422;
+
+type EntityErrorPayload = {
+  message: string;
+  errors: { field: string; message: string }[];
+};
+
 class HttpError extends Error {
   status: number;
-  payload: any;
+  payload: {
+    message: string;
+    [key: string]: any;
+  };
 
   constructor({ status, payload }: { status: number; payload: any }) {
     super("HTTP Error: ");
     this.status = status;
     this.payload = payload;
+  }
+}
+
+export class EntityError extends HttpError {
+  status: 422;
+  payload: EntityErrorPayload;
+
+  constructor({
+    payload,
+    status,
+  }: {
+    payload: EntityErrorPayload;
+    status: 422;
+  }) {
+    super({ status, payload });
+    this.payload = payload;
+    this.status = status;
   }
 }
 
@@ -40,9 +67,7 @@ const request = async <TPayload>(
   const body = options?.body ? JSON.stringify(options.body) : undefined;
   const baseHeaders = {
     "Content-Type": "application/json",
-    Authorization: clientSessionToken.value
-      ? `Bearer ${clientSessionToken.value}`
-      : "",
+    sessionToken: clientSessionToken.value,
   };
   const baseUrl = options?.baseUrl ?? envConfig.NEXT_PUBLIC_API_ENDPOINT;
   const fullUrl = url.startsWith("/")
@@ -63,6 +88,14 @@ const request = async <TPayload>(
   };
 
   if (!res.ok) {
+    if (res.status === ENTITY_ERROR_STATUS) {
+      throw new EntityError(
+        data as {
+          status: 422;
+          payload: EntityErrorPayload;
+        }
+      );
+    }
     throw new HttpError(data);
   }
 

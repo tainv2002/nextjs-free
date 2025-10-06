@@ -12,13 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
-import { useToast } from "@/hooks/use-toast";
 import authApiRequests from "@/apiRequests/auth";
 import { useRouter } from "next/navigation";
+import { handleErrorApi } from "@/lib/utils";
 
 const LoginForm = () => {
   const router = useRouter();
-  const { toast } = useToast();
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
@@ -31,33 +30,13 @@ const LoginForm = () => {
     try {
       const result = await authApiRequests.login(values);
 
-      const resultFromNextServer = await authApiRequests.auth({
+      await authApiRequests.auth({
         sessionToken: result.payload.data.token,
       });
 
       router.push("/me");
     } catch (error: any) {
-      const errors = error.payload.errors as {
-        field: keyof LoginBodyType;
-        message: string;
-      }[];
-
-      const status = error.status as number;
-
-      if (status === 422) {
-        errors.forEach((err) => {
-          form.setError(err.field, {
-            message: err.message,
-            type: "server",
-          });
-        });
-      } else {
-        toast({
-          title: "Lỗi",
-          description: error.payload.message || "Đã có lỗi xảy ra",
-          variant: "destructive",
-        });
-      }
+      handleErrorApi(error, form.setError);
     }
   };
 
@@ -97,7 +76,11 @@ const LoginForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full !mt-10">
+        <Button
+          type="submit"
+          className="w-full !mt-10"
+          disabled={form.formState.isSubmitting}
+        >
           Login
         </Button>
       </form>
