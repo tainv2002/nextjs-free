@@ -10,12 +10,12 @@ export function cn(...inputs: ClassValue[]) {
 
 export const handleErrorApi = (
   error: any,
-  setError: UseFormSetError<any>,
+  setError?: UseFormSetError<any>,
   duration?: number
 ) => {
   if (error instanceof EntityError) {
     error.payload.errors.forEach((err) => {
-      setError(err.field, {
+      setError?.(err.field, {
         message: err.message,
         type: "server",
       });
@@ -28,4 +28,8 @@ export const handleErrorApi = (
       duration: duration ?? 5000,
     });
   }
+};
+
+export const normalizePath = (path: string) => {
+  return path.startsWith("/") ? path.slice(1) : path;
 };

@@ -60,8 +60,8 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
       preValidation: fastify.auth([requireLoginedHook])
     },
     async (request, reply) => {
-      const { sessionToken } = request.cookies
-      const message = await logoutController(sessionToken as string)
+      const { sessiontoken } = request.headers
+      const message = await logoutController(sessiontoken as string)
       reply
         .clearCookie('sessionToken', {
           path: '/',

@@ -1,4 +1,5 @@
 import accountApiRequest from "@/apiRequests/account";
+import ButtonLogout from "@/app/components/ButtonLogout";
 import Profile from "@/app/me/Profile";
 import envConfig from "@/config";
 import { cookies } from "next/headers";
@@ -15,6 +16,7 @@ export default async function Page() {
       <h1>Welcome {result.payload.data.name}</h1>
 
       <Profile />
+      <ButtonLogout />
     </div>
   );
 }

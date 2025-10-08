@@ -1,4 +1,5 @@
 import envConfig from "@/config";
+import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 
 type CustomOptions = RequestInit & { baseUrl?: string };
@@ -11,7 +12,7 @@ type EntityErrorPayload = {
   errors: { field: string; message: string }[];
 };
 
-class HttpError extends Error {
+export class HttpError extends Error {
   status: number;
   payload: {
     message: string;
@@ -99,10 +100,16 @@ const request = async <TPayload>(
     throw new HttpError(data);
   }
 
-  if (["/auth/login", "/auth/register"].includes(url)) {
-    clientSessionToken.value = (payload as LoginResType).data.token;
-  } else if (["/auth/logout"].includes(url)) {
-    clientSessionToken.value = "";
+  const normalizedUrl = normalizePath(url);
+
+  if (typeof window !== "undefined") {
+    if (
+      ["auth/login", "auth/register"].some((item) => item === normalizedUrl)
+    ) {
+      clientSessionToken.value = (payload as LoginResType).data.token;
+    } else if (["auth/logout"].includes(normalizedUrl)) {
+      clientSessionToken.value = "";
+    }
   }
 
   return data;
