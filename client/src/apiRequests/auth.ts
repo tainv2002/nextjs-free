@@ -23,8 +23,10 @@ const authApiRequests = {
         },
       }
     ),
-  logoutFromNextClientToNextServer: () =>
-    http.post("/api/auth/logout", {}, { baseUrl: "" }),
+  logoutFromNextClientToNextServer: (
+    force: boolean = false,
+    signal?: AbortSignal
+  ) => http.post("/api/auth/logout", { force }, { baseUrl: "", signal }),
 };
 
 export default authApiRequests;

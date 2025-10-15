@@ -1,3 +1,12 @@
+import { decodeJwt } from "@/lib/utils";
+
+type PayloadJWT = {
+  iat: number;
+  exp: number;
+  tokenType: string;
+  userId: number;
+};
+
 export async function POST(request: Request) {
   const res = await request.json();
 
@@ -12,6 +21,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const payload = decodeJwt<PayloadJWT>(sessionToken);
+  const expiredDate = new Date((payload?.exp ?? 0) * 1000).toUTCString();
+
   return Response.json(
     {
       message: "Login successful",
@@ -19,7 +31,7 @@ export async function POST(request: Request) {
     {
       status: 200,
       headers: {
-        "Set-Cookie": `sessionToken=${sessionToken}; Path=/; HttpOnly; SameSite=Lax;`,
+        "Set-Cookie": `sessionToken=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Expires=${expiredDate}; Secure`,
       },
     }
   );
