@@ -6,6 +6,7 @@ type CustomOptions = RequestInit & { baseUrl?: string };
 type CustomOptionsWithoutBody = Omit<CustomOptions, "body">;
 
 const ENTITY_ERROR_STATUS = 422;
+const UNAUTHORIZED_ERROR_STATUS = 401;
 
 type EntityErrorPayload = {
   message: string;
@@ -59,6 +60,7 @@ class SessionToken {
 }
 
 export const clientSessionToken = new SessionToken();
+let clientLogoutRequest: Promise<any> | null = null;
 
 const request = async <TPayload>(
   method: "GET" | "POST" | "PUT" | "DELETE",
@@ -96,7 +98,22 @@ const request = async <TPayload>(
           payload: EntityErrorPayload;
         }
       );
+    } else if (res.status === UNAUTHORIZED_ERROR_STATUS) {
+      if (typeof window !== "undefined") {
+        if (!clientLogoutRequest) {
+          clientLogoutRequest = fetch("/api/auth/logout", {
+            method: "POST",
+            body: JSON.stringify({ force: true }),
+            headers: { ...baseHeaders, ...options?.headers },
+          });
+          await clientLogoutRequest;
+          clientSessionToken.value = "";
+          clientLogoutRequest = null;
+          window.location.href = "/login";
+        }
+      }
     }
+
     throw new HttpError(data);
   }
 

@@ -9,11 +9,11 @@ export default async function Page() {
   const cookieStore = cookies();
   const sessionToken = cookieStore.get("sessionToken")?.value ?? "";
 
-  const result = await accountApiRequest.me(sessionToken);
+  // const result = await accountApiRequest.me(sessionToken);
 
   return (
     <div>
-      <h1>Welcome {result.payload.data.name}</h1>
+      {/* <h1>Welcome {result.payload.data.name}</h1> */}
 
       <Profile />
       <ButtonLogout />
