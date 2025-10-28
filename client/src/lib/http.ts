@@ -2,6 +2,7 @@ import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
+import { de } from "zod/v4/locales";
 
 type CustomOptions = RequestInit & { baseUrl?: string };
 type CustomOptionsWithoutBody = Omit<CustomOptions, "body">;
@@ -68,11 +69,20 @@ const request = async <TPayload>(
   url: string,
   options?: CustomOptions
 ) => {
-  const body = options?.body ? JSON.stringify(options.body) : undefined;
+  const body = options?.body
+    ? options.body instanceof FormData
+      ? options.body
+      : JSON.stringify(options.body)
+    : undefined;
   const baseHeaders = {
     "Content-Type": "application/json",
     sessionToken: clientSessionToken.value,
   };
+
+  if (options?.body instanceof FormData) {
+    delete (baseHeaders as any)["Content-Type"];
+  }
+
   const baseUrl = options?.baseUrl ?? envConfig.NEXT_PUBLIC_API_ENDPOINT;
   const fullUrl = url.startsWith("/")
     ? `${baseUrl}${url}`

@@ -19,7 +19,7 @@ import productApiRequest from "@/apiRequests/product";
 import { handleErrorApi } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const AddProductForm = () => {
@@ -36,17 +36,19 @@ const AddProductForm = () => {
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-
-  const imageFileUrl = useMemo(() => {
-    if (imageFile) {
-      return URL.createObjectURL(imageFile);
-    }
-    return "";
-  }, [imageFile]);
+  const [imageFileUrl, setImageFileUrl] = useState<string>("");
 
   const onSubmit = async (values: CreateProductBodyType) => {
     try {
-      const result = await productApiRequest.create(values);
+      const formData = new FormData();
+      if (imageFile) {
+        formData.append("file", imageFile);
+      }
+      const imageRes = await productApiRequest.uploadImage(formData);
+      const result = await productApiRequest.create({
+        ...values,
+        image: imageRes?.payload?.data,
+      });
       toast({
         title: "Success",
         description: result.payload.message,
@@ -57,6 +59,14 @@ const AddProductForm = () => {
       handleErrorApi(error, form.setError);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (imageFileUrl) {
+        URL.revokeObjectURL(imageFileUrl);
+      }
+    };
+  }, [imageFileUrl]);
 
   return (
     <Form {...form}>
@@ -127,9 +137,11 @@ const AddProductForm = () => {
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
-                    setImageFile(file);
-                  }
+                  if (!file) return;
+                  setImageFile(file);
+                  const imageUrl = URL.createObjectURL(file);
+                  setImageFileUrl(imageUrl);
+                  form.setValue("image", imageUrl);
                 }}
               />
               <FormControl>
