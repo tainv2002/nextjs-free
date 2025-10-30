@@ -22,12 +22,19 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const AddProductForm = () => {
+interface ProductFormProps {
+  productId?: number;
+  initialData?: CreateProductBodyType;
+}
+
+const ProductForm = ({ productId, initialData }: ProductFormProps) => {
   const router = useRouter();
   const { toast } = useToast();
+  const isEditing = !!productId;
+
   const form = useForm<CreateProductBodyType>({
     resolver: zodResolver(CreateProductBody),
-    defaultValues: {
+    defaultValues: initialData || {
       name: "",
       price: 0,
       description: "",
@@ -36,23 +43,39 @@ const AddProductForm = () => {
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageFileUrl, setImageFileUrl] = useState<string>("");
+  const [imageFileUrl, setImageFileUrl] = useState<string>(
+    initialData?.image || ""
+  );
 
   const onSubmit = async (values: CreateProductBodyType) => {
     try {
-      const formData = new FormData();
+      let imageUrl = values.image;
+
+      // Upload new image if file is selected
       if (imageFile) {
+        const formData = new FormData();
         formData.append("file", imageFile);
+        const imageRes = await productApiRequest.uploadImage(formData);
+        imageUrl = imageRes?.payload?.data;
       }
-      const imageRes = await productApiRequest.uploadImage(formData);
-      const result = await productApiRequest.create({
+
+      const productData = {
         ...values,
-        image: imageRes?.payload?.data,
-      });
+        image: imageUrl,
+      };
+
+      let result;
+      if (isEditing) {
+        result = await productApiRequest.update(productId, productData);
+      } else {
+        result = await productApiRequest.create(productData);
+      }
+
       toast({
         title: "Success",
         description: result.payload.message,
       });
+
       router.push("/products");
       router.refresh();
     } catch (error: any) {
@@ -62,11 +85,11 @@ const AddProductForm = () => {
 
   useEffect(() => {
     return () => {
-      if (imageFileUrl) {
+      if (imageFileUrl && imageFileUrl !== initialData?.image) {
         URL.revokeObjectURL(imageFileUrl);
       }
     };
-  }, [imageFileUrl]);
+  }, [imageFileUrl, initialData?.image]);
 
   return (
     <Form {...form}>
@@ -131,7 +154,7 @@ const AddProductForm = () => {
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>Image</FormLabel>
               <Input
                 type="file"
                 accept="image/*"
@@ -159,12 +182,15 @@ const AddProductForm = () => {
 
         {imageFileUrl && (
           <div className="mt-4">
-            <Image
-              src={imageFileUrl}
-              alt="Selected Image"
-              width={300}
-              height={300}
-            />
+            <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+            <div className="relative w-[300px] h-[300px]">
+              <Image
+                src={imageFileUrl}
+                alt="Product Image"
+                fill
+                className="object-cover rounded-lg"
+              />
+            </div>
           </div>
         )}
         <Button
@@ -172,11 +198,11 @@ const AddProductForm = () => {
           className="w-full !mt-10"
           disabled={form.formState.isSubmitting}
         >
-          Add Product
+          {isEditing ? "Update Product" : "Add Product"}
         </Button>
       </form>
     </Form>
   );
 };
 
-export default AddProductForm;
+export default ProductForm;

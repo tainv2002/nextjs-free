@@ -23,17 +23,14 @@ export default function ProductList({ products }: ProductListProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <Link
-          href={`/products/${product.id}`}
-          key={product.id}
-          className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-        >
+        <>
           <div className="relative h-48 w-full bg-gray-100">
             <Image
               src={product.image}
               alt={product.name}
-              fill
-              className="object-contain"
+              className="object-cover"
+              width={150}
+              height={150}
             />
           </div>
           <div className="p-4">
@@ -53,7 +50,7 @@ export default function ProductList({ products }: ProductListProps) {
               <ProductDeleteButton productId={product.id} />
             </div>
           </div>
-        </Link>
+        </>
       ))}
     </div>
   );
