@@ -15,8 +15,7 @@ export default function ProductDeleteButton({
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleDelete = async (event: any) => {
-    event.stopPropagation();
+  const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {

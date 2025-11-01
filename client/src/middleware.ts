@@ -13,7 +13,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/me", request.url));
   }
 
-  if (!sessionToken && privatePaths.includes(pathname)) {
+  if (
+    !sessionToken &&
+    (privatePaths.includes(pathname) || pathname.startsWith("/products/"))
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -22,5 +25,5 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/login", "/register", "/me"],
+  matcher: ["/login", "/register", "/me", "/products/:path*"],
 };

@@ -24,7 +24,10 @@ export default function ProductList({ products }: ProductListProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
         <>
-          <div className="relative h-48 w-full bg-gray-100">
+          <Link
+            href={`/products/${product.id}`}
+            className="relative h-48 w-full bg-gray-100"
+          >
             <Image
               src={product.image}
               alt={product.name}
@@ -32,7 +35,7 @@ export default function ProductList({ products }: ProductListProps) {
               width={150}
               height={150}
             />
-          </div>
+          </Link>
           <div className="p-4">
             <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
             <p className="text-2xl font-bold text-primary mb-2">
