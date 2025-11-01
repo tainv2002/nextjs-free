@@ -22,18 +22,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
-  const sessionToken = cookieStore.get("sessionToken")?.value ?? "";
   let user = null;
-  try {
-    const res = await accountApiRequest.me(sessionToken);
-    user = res.payload.data;
-  } catch (error) {}
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`}>
-        <AppProvider initialSessionToken={sessionToken} user={user}>
+        <AppProvider user={user}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

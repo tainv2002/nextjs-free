@@ -2,7 +2,6 @@ import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
-import { de } from "zod/v4/locales";
 
 type CustomOptions = RequestInit & { baseUrl?: string };
 type CustomOptionsWithoutBody = Omit<CustomOptions, "body">;
@@ -46,22 +45,8 @@ export class EntityError extends HttpError {
   }
 }
 
-class SessionToken {
-  private token = "";
+export const isClient = () => typeof window !== "undefined";
 
-  get value() {
-    return this.token;
-  }
-
-  set value(token: string) {
-    if (typeof window === "undefined") {
-      throw new Error("SessionToken can only be set in a browser environment");
-    }
-    this.token = token;
-  }
-}
-
-export const clientSessionToken = new SessionToken();
 let clientLogoutRequest: Promise<any> | null = null;
 
 const request = async <TPayload>(
@@ -74,13 +59,17 @@ const request = async <TPayload>(
       ? options.body
       : JSON.stringify(options.body)
     : undefined;
-  const baseHeaders = {
+  const baseHeaders: Record<string, string> = {
     "Content-Type": "application/json",
-    sessionToken: clientSessionToken.value,
   };
 
   if (options?.body instanceof FormData) {
     delete (baseHeaders as any)["Content-Type"];
+  }
+
+  if (isClient()) {
+    const sessionToken = localStorage.getItem("sessionToken");
+    baseHeaders["sessionToken"] = sessionToken || "";
   }
 
   const baseUrl = options?.baseUrl ?? envConfig.NEXT_PUBLIC_API_ENDPOINT;
@@ -110,17 +99,21 @@ const request = async <TPayload>(
         }
       );
     } else if (res.status === UNAUTHORIZED_ERROR_STATUS) {
-      if (typeof window !== "undefined") {
+      if (isClient()) {
         if (!clientLogoutRequest) {
           clientLogoutRequest = fetch("/api/auth/logout", {
             method: "POST",
             body: JSON.stringify({ force: true }),
             headers: { ...baseHeaders, ...options?.headers },
           });
-          await clientLogoutRequest;
-          clientSessionToken.value = "";
-          clientLogoutRequest = null;
-          window.location.href = "/login";
+          try {
+            await clientLogoutRequest;
+          } catch (error) {
+          } finally {
+            clientLogoutRequest = null;
+            window.location.href = "/login";
+            localStorage.removeItem("sessionToken");
+          }
         }
       } else {
         const sessionToken = (options?.headers as any)?.sessionToken;
@@ -134,13 +127,16 @@ const request = async <TPayload>(
 
   const normalizedUrl = normalizePath(url);
 
-  if (typeof window !== "undefined") {
+  if (isClient()) {
     if (
       ["auth/login", "auth/register"].some((item) => item === normalizedUrl)
     ) {
-      clientSessionToken.value = (payload as LoginResType).data.token;
+      localStorage.setItem(
+        "sessionToken",
+        (payload as LoginResType).data.token
+      );
     } else if (["auth/logout"].includes(normalizedUrl)) {
-      clientSessionToken.value = "";
+      localStorage.removeItem("sessionToken");
     }
   }
 

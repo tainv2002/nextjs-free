@@ -1,13 +1,10 @@
 "use client";
 import authApiRequests from "@/apiRequests/auth";
-import { clientSessionToken } from "@/lib/http";
-import { handleErrorApi } from "@/lib/utils";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect } from "react";
 
-export default function Page() {
+function LogoutContent() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const sessionToken = searchParams.get("sessionToken");
 
@@ -25,7 +22,9 @@ export default function Page() {
       }
     };
 
-    if (sessionToken === clientSessionToken.value) {
+    const sessionTokenFromStorage = localStorage.getItem("sessionToken");
+
+    if (sessionToken === sessionTokenFromStorage) {
       handleLogout();
     }
 
@@ -34,5 +33,13 @@ export default function Page() {
     };
   }, [router, sessionToken]);
 
-  return <div>Page</div>;
+  return <div>Logging out...</div>;
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LogoutContent />
+    </Suspense>
+  );
 }

@@ -11,6 +11,7 @@ export default function ButtonLogout() {
     try {
       await authApiRequests.logoutFromNextClientToNextServer();
       router.push("/login");
+      localStorage.removeItem("sessionToken");
     } catch (error) {
       handleErrorApi(error);
     }

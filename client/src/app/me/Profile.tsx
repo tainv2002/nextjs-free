@@ -1,6 +1,5 @@
 "use client";
 import accountApiRequest from "@/apiRequests/account";
-import { clientSessionToken } from "@/lib/http";
 import React, { useEffect } from "react";
 
 export default function Profile() {
