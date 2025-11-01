@@ -4,11 +4,49 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductDeleteButton from "../product-delete-button";
+import { Metadata } from "next";
+import { cache } from "react";
 
 interface ProductDetailPageProps {
   params: {
     id: string;
   };
+}
+
+// Cache the product fetch to avoid duplicate requests
+const getProduct = cache(async (productId: number) => {
+  const result = await productApiRequest.getDetail(productId);
+  return result.payload.data;
+});
+
+export async function generateMetadata({
+  params,
+}: ProductDetailPageProps): Promise<Metadata> {
+  const productId = Number(params.id);
+
+  try {
+    const product = await getProduct(productId);
+
+    return {
+      title: `${product.name} - Product Details`,
+      description: product.description,
+      openGraph: {
+        title: product.name,
+        description: product.description,
+        images: [
+          {
+            url: product.image,
+            alt: product.name,
+          },
+        ],
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Product Not Found",
+      description: "The requested product could not be found",
+    };
+  }
 }
 
 export default async function ProductDetailPage({
@@ -19,19 +57,9 @@ export default async function ProductDetailPage({
   let product;
 
   try {
-    const result = await productApiRequest.getDetail(productId);
-    product = result.payload.data;
-  } catch (error) {}
-
-  if (!product) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-muted-foreground mb-4">Product not found</p>
-        <Link href="/products">
-          <Button>Back to Products</Button>
-        </Link>
-      </div>
-    );
+    product = await getProduct(productId);
+  } catch (error) {
+    notFound();
   }
 
   return (

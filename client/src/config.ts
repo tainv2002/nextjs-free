@@ -16,7 +16,6 @@ const envConfig = configProject.data;
 export default envConfig;
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface ProcessEnv extends z.infer<typeof configSchema> {}
   }

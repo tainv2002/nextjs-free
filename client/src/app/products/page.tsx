@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import ProductList from "./product-list";
 import productApiRequest from "@/apiRequests/product";
 import { ProductListResType } from "@/schemaValidations/product.schema";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Products",
+};
 
 export default async function ProductsPage() {
   let products: ProductListResType["data"] = [];

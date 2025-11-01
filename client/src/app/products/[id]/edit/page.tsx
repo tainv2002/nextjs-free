@@ -3,11 +3,39 @@ import productApiRequest from "@/apiRequests/product";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
+import { cache } from "react";
 
 interface EditProductPageProps {
   params: {
     id: string;
   };
+}
+
+// Cache the product fetch to avoid duplicate requests
+const getProduct = cache(async (productId: number) => {
+  const result = await productApiRequest.getDetail(productId);
+  return result.payload.data;
+});
+
+export async function generateMetadata({
+  params,
+}: EditProductPageProps): Promise<Metadata> {
+  const productId = Number(params.id);
+
+  try {
+    const product = await getProduct(productId);
+
+    return {
+      title: `Edit ${product.name}`,
+      description: `Edit product: ${product.name}`,
+    };
+  } catch (error) {
+    return {
+      title: "Edit Product",
+      description: "Edit product details",
+    };
+  }
 }
 
 export default async function EditProductPage({
@@ -22,8 +50,7 @@ export default async function EditProductPage({
   let product;
 
   try {
-    const result = await productApiRequest.getDetail(productId);
-    product = result.payload.data;
+    product = await getProduct(productId);
   } catch (error) {
     notFound();
   }
